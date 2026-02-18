@@ -44,7 +44,7 @@ int parse_input(char *input, Command *cmd)
                 return -1;
             }
 
-            cmd->input_file = token;
+            cmd->input_file = strdup(token);
         }
 
         // OUTPUT REDIRECTION (overwrite)
@@ -57,7 +57,7 @@ int parse_input(char *input, Command *cmd)
                 return -1;
             }
 
-            cmd->output_file = token;
+            cmd->output_file = strdup(token);
             cmd->append = 0;
         }
 
@@ -71,7 +71,7 @@ int parse_input(char *input, Command *cmd)
                 return -1;
             }
 
-            cmd->output_file = token;
+            cmd->output_file = strdup(token);
             cmd->append = 1;
         }
 
@@ -90,7 +90,7 @@ int parse_input(char *input, Command *cmd)
         // NORMAL ARGUMENT
         else
         {
-            cmd->args[arg_index++] = token;
+            cmd->args[arg_index++] = strdup(token);
         }
 
         token = strtok(NULL, DELIM);
