@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <fcntl.h>
+#include <fcntl.h> //so that we can use open() for file redirection
 
 #include "executor.h"
 #include "jobs.h"
@@ -56,7 +56,34 @@ void execute_command(Command *cmd)
     }
 
     if (pid == 0) {
-        // =========================
+
+        // INPUT REDIRECTION
+        if (cmd->input_file) {
+            int fd = open(cmd->input_file, O_RDONLY);
+            if (fd < 0) {
+                perror("open input");
+                exit(1);
+            }
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+        }
+
+        // OUTPUT REDIRECTION
+        if (cmd->output_file) {
+            int flags = O_WRONLY | O_CREAT;
+            if (cmd->append)
+                flags |= O_APPEND;
+            else
+                flags |= O_TRUNC;
+
+            int fd = open(cmd->output_file, flags, 0644);
+            if (fd < 0) {
+                perror("open output");
+                exit(1);
+            }
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        }
         // CHILD PROCESS
         // =========================
 
@@ -113,3 +140,8 @@ void execute_command(Command *cmd)
         }
     }
 }
+
+
+//update: Redirection is handled in the child process before execvp.
+//We open the specified file, replace stdin or stdout using dup2, 
+//then execute the command so it inherits the redirected descriptors.
