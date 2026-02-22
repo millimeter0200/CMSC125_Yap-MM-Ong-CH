@@ -142,6 +142,5 @@ void execute_command(Command *cmd)
 }
 
 
-//update: Redirection is handled in the child process before execvp.
-//We open the specified file, replace stdin or stdout using dup2, 
-//then execute the command so it inherits the redirected descriptors.
+// Redirection must occur before execvp so the child process
+// runs the program with modified file descriptors.

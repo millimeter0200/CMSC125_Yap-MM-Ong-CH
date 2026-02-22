@@ -7,9 +7,9 @@
 #include "executor.h"
 #include "jobs.h"
 
-#define INPUT_SIZE 1024
+#define INPUT_SIZE 1024 //this is for when we read user input, we need a buffer to store it
 
-int main(void) {
+int main(void) { //to handle Ctrl+D, we check for NULL return from fgets and break the loop to exit gracefully instead of crashing or entering an infinite loop
     char input[INPUT_SIZE];
     Command cmd;
 
@@ -39,3 +39,4 @@ int main(void) {
 
     return 0;
 }
+// Reap finished background jobs before showing the prompt to prevent zombie processes.
