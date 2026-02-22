@@ -4,32 +4,42 @@ CMSC 125-1 LAB 1
 ONG, CHRISTEL HOPE
 YAP, MAE MARICAR
 
-Summary:
 I. Compilation and usage instructions
-II. List of implemented features (PR2)
+    1. Open Ubuntu
+    2. Compile with: "gcc -Wall -Wextra src/*.c -Iinclude -o mysh"
+    3. Run with: "./mysh"
+    4. Should display "mysh >"
+    5. Enter commands
+    6. Exit with Ctrl C to stop
+
+II. List of implemented features
     
-1. Interactive Shell Loop
-Continuously accepts user input, cleans up finished bg processes before each prompt, then ignores empty input
+    1. Shell continuously accepts user input, cleans up finished bg processes before each prompt, then ignores empty input
+    
+    2. Built-in Commands are exit, cd, pwd execute in the parent process.
+    
+    3. Execute external command; uses fork() to create child process, child executes command via execvp(), and the parent waits for foreground processes and does not wait for bg processes
 
-3. Built-in Commands: exit, cd, pwd execute in the parent process.
+    4. Background Execution
+    -commands followed by & run in background
+    -background PIDs are stored in a job list
+    -completed background jobs are reaped using waitpid(..., WNOHANG)
+    -prevents zombie processes
 
-4. External Command Execution
-Uses fork() to create child process, child executes command via execvp(), and the parent waits for foreground processes and does not wait for bg processes
+    5. Command Parsing
+    The parser tokenizes input using whitespacem, detects special operators, and populates a Command structure containing the command name, argument list, input/output file, append flag, background flag
 
-5. Background Execution
--commands followed by & run in background
--background PIDs are stored in a job list
--completed background jobs are reaped using waitpid(..., WNOHANG)
--prevents zombie processes
-
-6. Command Parsing
-The parser tokenizes input using whitespacem, detects special operators, and populates a Command structure containing the command name, argument list, input/output file, append flag, background flag
+    6. Input/output redirection for standard input (<), output (> overwrite and >> append) applied in child proces before execvp so executed programs inherit meodified file descriptors.
 
 III. Known limitations or bugs
+    No pipeline and quoting support. Limited argument count, Basic error reporting, and no job control commands.
+    
 IV. Design decisions and architecture overview
+    shell divided into 5 modules: main, parser, executor, jobs, and command in C. 
+    
 V. Screenshots showing functionality
 
-**WEEK 2: DESIGN NOTES (Lab1 PR2)**
+DESIGN NOTES (Lab1)
 
 I. Problem Refinement
 For Week 2, the focus shifted from planning to concrete implementation of the core shell workflow. The primary objective was to complete command parsing and integrate it with execution while maintaining modular separation between components.
@@ -80,21 +90,12 @@ cleanup-> prompt -> read -> parse-> execute -> repeat
     - Prevents zombie processes
     (For improving the separation of concerns and modular design)
 
-III. Refactoring Adjustments from PR1
--Background job logic moved fully into jobs module
--Clear separation between parser and executor responsibilities
--Improved validation logic in parsing stage
--Reduced logic clutter in main loop
-
-IV. Remaining Tasks for Week 3
--Integrate full I/O redirection handling in executor using open(), dup2(), close()
--Improve error reporting consistency
--Additional refactoring for clarity and efficiency
--Strengthen input validation
-
-V. Updated Timeline
-
-Week 2 (Completed):
+V. Timeline
+Week 1:
+-Design notes (problem, requirements, and timeline)
+-initial commits + skeleton of header files and src files 
+     
+Week 2:
 -Parser fully implemented
 -Executor integrated with parser
 -Bg job management functional
