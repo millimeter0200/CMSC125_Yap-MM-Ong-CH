@@ -16,18 +16,15 @@ static int is_operator(const char *token)
     );
 }
 
-int parse_input(char *input, Command *cmd)
+int parse_input(char *input, Command *cmd) 
 {
     char *token;
     int arg_index = 0;
 
-    // remove newline
     input[strcspn(input, "\n")] = '\0';
 
-    // start tokenizing
     token = strtok(input, DELIM);
 
-    // empty input
     if (token == NULL)
         return -1;
 
@@ -40,11 +37,15 @@ int parse_input(char *input, Command *cmd)
             token = strtok(NULL, DELIM);
 
             if (token == NULL || is_operator(token)) {
-                printf("Error: expected input filename after <\n");
+                fprintf(stderr, "Error: expected input filename after <\n"); //stderr is to ensure error messages are visible even when stdout is redirected to a file
                 return -1;
             }
-
-            cmd->input_file = strdup(token);
+            char *copy = strdup(token);
+            if (!copy) {
+                perror("strdup");
+                return -1;
+            }
+            cmd->input_file = copy;
         }
 
         // OUTPUT REDIRECTION (overwrite)
@@ -53,11 +54,16 @@ int parse_input(char *input, Command *cmd)
             token = strtok(NULL, DELIM);
 
             if (token == NULL || is_operator(token)) {
-                printf("Error: expected output filename after >\n");
+                fprintf(stderr, "Error: expected output filename after >\n");
                 return -1;
             }
-
-            cmd->output_file = strdup(token);
+            
+            char *copy = strdup(token);
+            if (!copy) {
+                perror("strdup");
+                return -1;
+            }
+            cmd->output_file = copy;
             cmd->append = 0;
         }
 
@@ -67,36 +73,55 @@ int parse_input(char *input, Command *cmd)
             token = strtok(NULL, DELIM);
 
             if (token == NULL || is_operator(token)) {
-                printf("Error: expected output filename after >>\n");
+                fprintf(stderr, "Error: expected output filename after >>\n");
                 return -1;
             }
-
-            cmd->output_file = strdup(token);
+            
+            char *copy = strdup(token);
+            if (!copy) {
+                perror("strdup");
+                return -1;
+            }
+            cmd->output_file = copy;
             cmd->append = 1;
         }
 
-        // BACKGROUND EXECUTION
+        // BACKGROUND EXECUTION 
         else if (strcmp(token, "&") == 0)
         {
-            // reject standalone '&'
+            //to reject standalone '&'
             if (arg_index == 0) {
-                printf("Error: '&' without command\n");
+                fprintf(stderr, "Error: '&' without command\n");
                 return -1;
             }
 
             cmd->background = 1;
+            break; //added, since '&' should be last token, ignore anything after
         }
 
-        // NORMAL ARGUMENT
+        // NORMAL ARGUMENT 
+            // Duplicate tokens so the command structure owns its memory.
+            // This allows safe cleanup after execution.
         else
         {
-            cmd->args[arg_index++] = strdup(token);
-        }
+            //to prevent writing past the args array
+            if (arg_index >= MAX_ARGS - 1) { //since last slot is for NULL terminator, we check against MAX_ARGS - 1
+                fprintf(stderr, "Error: too many arguments\n");
+                return -1;
+            }
+
+            char *copy = strdup(token);
+            if (!copy) {
+                perror("strdup");
+                return -1;
+            } 
+            cmd->args[arg_index++] = copy;
+        } //this block is to handle normal command arguments, we strdup to ensure they persist after strtok modifies the input string
 
         token = strtok(NULL, DELIM);
     }
 
-    // no command found
+    // no command found; don't have anything to execute
     if (arg_index == 0)
         return -1;
 
